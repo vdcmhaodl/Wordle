@@ -3,7 +3,7 @@ import random
 class WordleGame:
     def __init__(self, word_list):
         self.word_list = word_list
-        self.secret_word = random.choice(self.word_list)
+        self.secret_word = random.choice(self.word_list).upper()
         self.attempts = 6
         self.guesses = []
 
@@ -19,14 +19,23 @@ class WordleGame:
         return feedback
 
     def _get_feedback(self, guess):
-        feedback = []
-        for i in range(len(guess)):
-            if guess[i] == self.secret_word[i]:
-                feedback.append('correct')
-            elif guess[i] in self.secret_word:
-                feedback.append('present')
+        feedback = ['absent', 'absent', 'absent', 'absent', 'absent']
+        secret = self.secret_word.upper()
+        g = guess.upper()
+        secret_chars = list(secret)
+        for i, ch in enumerate(g):
+            if ch == secret_chars[i]:
+                feedback[i] = 'correct'
+                secret_chars[i] = None
+        for i, ch in enumerate(g):
+            if feedback[i] == 'correct':
+                continue
+            if ch in secret_chars:
+                feedback[i] = 'present'
+                secret_chars[secret_chars.index(ch)] = None
             else:
-                feedback.append('absent')
+                feedback[i] = 'absent'
+
         return feedback
 
     def is_game_over(self):
