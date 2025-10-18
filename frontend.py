@@ -58,7 +58,7 @@ class WordleFrontend:
                 y = row * 100 + 20
                 rect = pygame.Rect(x, y, 90, 90)
                 pygame.draw.rect(self.screen, BG_COLOR, rect)
-                pygame.draw.rect(self.screen, BORDER, rect, 2)
+                pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
                 
                 if row < len(self.game.guesses):
                     guess = self.game.guesses[row]
@@ -94,6 +94,7 @@ class WordleFrontend:
     
                 elif row == len(self.game.guesses):
                     if col < len(self.current_guess):
+                        pygame.draw.rect(self.screen, BORDER, rect, 2)
                         letter_surf = self.font.render(self.current_guess[col], True, BLACK)
                         letter_rect = letter_surf.get_rect(center=rect.center)
                         self.screen.blit(letter_surf, letter_rect)
