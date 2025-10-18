@@ -8,7 +8,21 @@ GREEN = pygame.Color("#6aaa64")
 YELLOW = pygame.Color("#c9b458")
 DARK_GRAY = pygame.Color("#787c7e")
 BORDER = pygame.Color("#878a8c")
-
+class Button:
+    def __init__(self, x, y, width, height, text, font, color, hover_color, action=None):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.text = text
+        self.font = font
+        self.hover_color = hover_color
+        self.current_color = color
+        self.action = action
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.current_color, self.rect)
+        text_surf = self.font.render(self.text, True, BLACK)
+        text_rect = text_surf.get_rect(center=self.rect.center)
+        screen.blit(text_surf, text_rect)
+    def isPressed(self, x, y):
+        return self.rect.collidepoint(x, y)
 class WordleFrontend:
     def __init__(self, word_list):
         pygame.init()
@@ -25,17 +39,19 @@ class WordleFrontend:
             "ASDFGHJKL",
             "ZXCVBNM"
         ]
+        buttons = []
         self.screen.fill(BG_COLOR)
+        buttons.append(Button(6.3 * 50 + 55 + (3 * 35), 625 + 2 * 60, 100, 55, "ENTER", self.font, LIGHT_GRAY, DARK_GRAY))
+        buttons.append(Button(20, 625 + 2 * 60, 100, 55, "DEL", self.font, LIGHT_GRAY, DARK_GRAY))
         for row, keys in enumerate(keyboard):
             for col, key in enumerate(keys):
                 x = col * 50 + 55 + (row * 35)
                 y = 625 + (row * 60)
-                rect = pygame.Rect(x, y, 45, 55)
-                pygame.draw.rect(self.screen, LIGHT_GRAY, rect)
-                pygame.draw.rect(self.screen, BORDER, rect, 2)
-                letter_surf = self.font.render(key, True, BLACK)
-                letter_rect = letter_surf.get_rect(center=rect.center)
-                self.screen.blit(letter_surf, letter_rect)
+                button = Button(x, y, 45, 55, key, self.font, LIGHT_GRAY, DARK_GRAY)
+                buttons.append(button)
+        for button in buttons:
+            button.draw(self.screen)
+    
         for row in range(6):
             for col in range(5):
                 x = col * 100 + 55
@@ -84,6 +100,32 @@ class WordleFrontend:
         
         pygame.display.flip()
     def input_handle(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+            keyboard = [
+                "QWERTYUIOP",
+                "ASDFGHJKL",
+                "ZXCVBNM"
+            ]
+            for row, keys in enumerate(keyboard):
+                for col, key in enumerate(keys):
+                    bx = col * 50 + 55 + (row * 35)
+                    by = 625 + (row * 60)
+                    button_rect = pygame.Rect(bx, by, 45, 55)
+                    if button_rect.collidepoint(x, y):
+                        if len(self.current_guess) < 5:
+                            self.current_guess += key
+            enter_rect = pygame.Rect(6.3 * 50 + 55 + (3 * 35), 625 + 2 * 60, 100, 55)
+            backspace_rect = pygame.Rect(20, 625 + 2 * 60, 100, 55)
+            if enter_rect.collidepoint(x, y):
+                if len(self.current_guess) == 5:
+                    try:
+                        self.game.make_guess(self.current_guess)
+                        self.current_guess = ""
+                    except ValueError as e:
+                        print(e)
+            if backspace_rect.collidepoint(x, y):
+                self.current_guess = self.current_guess[:-1]
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 self.current_guess = self.current_guess[:-1]
@@ -114,7 +156,7 @@ class WordleFrontend:
         running = True
         while running:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
                     running = False
     def run(self):
         while self.running:
