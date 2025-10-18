@@ -8,6 +8,7 @@ class WordleGame:
         self.guesses = []
 
     def make_guess(self, guess):
+        guess = guess.upper()
         if len(guess) != len(self.secret_word):
             raise ValueError("Guess must be the same length as the secret word.")
         if guess not in self.word_list:
