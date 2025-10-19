@@ -33,7 +33,19 @@ class WordleFrontend:
         self.running = True
         self.current_guess = ""
         
+        #Bounce animation
+        self.bounce_state = [0] * 5
+        self.bounce_time = 200
+        self.bounce_max_scale = 1.1
+        self.clock = pygame.time.Clock()
     def draw_board(self):
+        dt = self.clock.tick(60)
+        for i in range(len(self.bounce_state)):
+            if self.bounce_state[i] > 0:
+                self.bounce_state[i] -= dt
+                if self.bounce_state[i] < 0:
+                    self.bounce_state[i] = 0
+            
         keyboard = [
             "QWERTYUIOP",
             "ASDFGHJKL",
@@ -60,6 +72,25 @@ class WordleFrontend:
                 pygame.draw.rect(self.screen, BG_COLOR, rect)
                 pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
                 
+                cur_x = x
+                cur_y = y
+                cur_w = 90
+                cur_h = 90
+                if row == len(self.game.guesses) and col < len(self.current_guess) and self.bounce_state[col] > 0:
+                    time = self.bounce_time - self.bounce_state[col]
+                    if time < self.bounce_time / 2:
+                        scale = 1 + (self.bounce_max_scale - 1) * (time / (self.bounce_time / 2))
+                    else:
+                        scale = self.bounce_max_scale - (self.bounce_max_scale - 1) * ((time - self.bounce_time / 2) / (self.bounce_time / 2))
+                    cur_w = 90 * scale
+                    cur_h = 90 * scale
+                    cur_x = x - (cur_w - 90) / 2
+                    cur_y = y - (cur_h - 90) / 2
+                rect = pygame.Rect(cur_x, cur_y, cur_w, cur_h)
+                
+                pygame.draw.rect(self.screen, BG_COLOR, rect)
+                pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
+                    
                 if row < len(self.game.guesses):
                     guess = self.game.guesses[row]
                     feedback = self.game._get_feedback(guess)
@@ -116,6 +147,7 @@ class WordleFrontend:
                     if button_rect.collidepoint(x, y):
                         if len(self.current_guess) < 5:
                             self.current_guess += key
+                            self.bounce_state[len(self.current_guess) - 1] = self.bounce_time
             enter_rect = pygame.Rect(6.3 * 50 + 55 + (3 * 35), 625 + 2 * 60, 100, 55)
             backspace_rect = pygame.Rect(20, 625 + 2 * 60, 100, 55)
             if enter_rect.collidepoint(x, y):
@@ -123,23 +155,28 @@ class WordleFrontend:
                     try:
                         self.game.make_guess(self.current_guess)
                         self.current_guess = ""
+                        self.bounce_state = [0] * 5
                     except ValueError as e:
                         print(e)
             if backspace_rect.collidepoint(x, y):
+                self.bounce_state[len(self.current_guess) - 1] = 0
                 self.current_guess = self.current_guess[:-1]
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
+                self.bounce_state[len(self.current_guess) - 1] = 0
                 self.current_guess = self.current_guess[:-1]
             elif event.key == pygame.K_RETURN:
                 if len(self.current_guess) == 5:
                     try:
                         self.game.make_guess(self.current_guess)
                         self.current_guess = ""
+                        self.bounce_state = [0] * 5
                     except ValueError as e:
                         print(e)
             else:
                 if len(self.current_guess) < 5 and event.unicode.isalpha():
                     self.current_guess += event.unicode.upper()
+                    self.bounce_state[len(self.current_guess) - 1] = self.bounce_time
     def game_over_screen(self):
         self.screen.fill(BG_COLOR)
         ex = "Press any key to exit."
