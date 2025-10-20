@@ -3,7 +3,7 @@
 ### Overview
 Wordle is a popular guessing word game. This is a self-project contributed by Võ Đình Cao Minh Hào - 24127035, this project is for Computation Thinking Course by VNUHCM-University of Science.
 
-Thank you for wordlist dataset to: https://github.com/tabatkins/wordle-list
+Thank you **tabatkins** for  wordlist dataset: https://github.com/tabatkins/wordle-list
 
 ### How to run
 
