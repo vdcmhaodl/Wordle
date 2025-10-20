@@ -1,4 +1,5 @@
 import pygame
+import math
 from backend import WordleGame
 
 BG_COLOR = pygame.Color("#FFFFFF")
@@ -38,6 +39,11 @@ class WordleFrontend:
         self.bounce_time = 200
         self.bounce_max_scale = 1.1
         self.clock = pygame.time.Clock()
+        
+        #Shake animation
+        self.shake_state = 0
+        self.shake_time = 400
+        self.shake_magnitude = 10
     def draw_board(self):
         dt = self.clock.tick(60)
         for i in range(len(self.bounce_state)):
@@ -45,7 +51,10 @@ class WordleFrontend:
                 self.bounce_state[i] -= dt
                 if self.bounce_state[i] < 0:
                     self.bounce_state[i] = 0
-            
+        if self.shake_state > 0:
+            self.shake_state -= dt
+            if self.shake_state < 0:
+                self.shake_state = 0
         keyboard = [
             "QWERTYUIOP",
             "ASDFGHJKL",
@@ -65,8 +74,12 @@ class WordleFrontend:
             button.draw(self.screen)
     
         for row in range(6):
+            x_offset = 0
+            if row == len(self.game.guesses) and self.shake_state > 0:
+                time = (self.shake_time - self.shake_state) / self.shake_time
+                x_offset = self.shake_magnitude * math.sin(time * math.pi * 8) * (1.0 - time)
             for col in range(5):
-                x = col * 100 + 55
+                x = col * 100 + 55 + x_offset
                 y = row * 100 + 20
                 rect = pygame.Rect(x, y, 90, 90)
                 pygame.draw.rect(self.screen, BG_COLOR, rect)
@@ -158,6 +171,7 @@ class WordleFrontend:
                         self.bounce_state = [0] * 5
                     except ValueError as e:
                         print(e)
+                        self.shake_state = self.shake_time
             if backspace_rect.collidepoint(x, y):
                 self.bounce_state[len(self.current_guess) - 1] = 0
                 self.current_guess = self.current_guess[:-1]
@@ -173,6 +187,7 @@ class WordleFrontend:
                         self.bounce_state = [0] * 5
                     except ValueError as e:
                         print(e)
+                        self.shake_state = self.shake_time
             else:
                 if len(self.current_guess) < 5 and event.unicode.isalpha():
                     self.current_guess += event.unicode.upper()
