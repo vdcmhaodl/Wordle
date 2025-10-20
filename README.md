@@ -16,7 +16,7 @@ Install pygame package
 pip install pygame
 ```
 
-Clone the reposytory to local
+Clone the repository to local
 ```
 git clone https://github.com/vdcmhaodl/Wordle
 ```
