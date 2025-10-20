@@ -7,21 +7,37 @@ Thank you for wordlist dataset to: https://github.com/tabatkins/wordle-list
 
 ### How to run
 
-Python version: 3.11
+**Python version: 3.11+**
 
-Pip version: 24.3.1
+#### 1. Clone the repository 
 
-Install pygame package
-```
-pip install pygame
-```
-
-Clone the repository to local
+Clone the repository to your local machine:
 ```
 git clone https://github.com/vdcmhaodl/Wordle
+cd Wordle
+```
+#### 2. Create a Virtual Environment (Optional but Recommended)
+Create a virtual environment to avoid conflicts with other projects.
+```
+python -m venv venv
 ```
 
-Run main.py to play
+Active it:
+
+- On Windows:
+    ```
+    .\venv\Scripts\activate
+    ```
+- On MacOS/Linux:
+    ```
+    source venv/bin/activate
+    ```
+#### 3. Install Dependencies
+Install the required packages using requirements.txt
+```
+pip install -r requirements.txt
+```
+#### 4. Run the game
 ```
 python main.py
 ```
