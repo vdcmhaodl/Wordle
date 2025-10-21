@@ -26,7 +26,7 @@ Active it:
 
 - On Windows:
     ```
-    .\.venv\Scripts\activate
+    .\venv\Scripts\activate
     ```
 - On MacOS/Linux:
     ```
@@ -43,6 +43,11 @@ Install the required packages using requirements.txt
 pip install -r requirements.txt
 ```
 #### 4. Run the game
-```
-python main.py
-```
+- On Windows:
+    ```
+    py main.py
+    ```
+- On MacOS/Linux:
+    ```
+    python main.py
+    ```
