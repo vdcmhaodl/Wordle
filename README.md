@@ -34,9 +34,9 @@ Active it:
     ```
 Deactive it:
 
-    ```
-    deactivate
-    ```
+```
+deactivate
+```
 #### 3. Install Dependencies
 Install the required packages using requirements.txt
 ```
