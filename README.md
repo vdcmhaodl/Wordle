@@ -33,6 +33,7 @@ Active it:
     source venv/bin/activate
     ```
 Deactive it:
+
     ```
     deactivate
     ```
