@@ -10,7 +10,7 @@ YELLOW = pygame.Color("#c9b458")
 DARK_GRAY = pygame.Color("#787c7e")
 BORDER = pygame.Color("#878a8c")
 class Button:
-    def __init__(self, x, y, width, height, text, font, color, hover_color, text_color = BLACK, action=None):
+    def __init__(self, x, y, width, height, text, font, color, hover_color, text_color=BLACK, action=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.font = font
@@ -204,8 +204,8 @@ class WordleFrontend:
         button_height = 60
         button_x = (self.screen.get_width() - button_width) / 2
         button_y = 450
-        replay_button = Button(button_x, button_y, button_width, button_height, "Play Again", self.font, LIGHT_GRAY, DARK_GRAY, BG_COLOR)
-        quit_button = Button(button_x, button_y + 80, button_width, button_height, "Quit", self.font, LIGHT_GRAY, DARK_GRAY, BG_COLOR)
+        replay_button = Button(button_x, button_y, button_width, button_height, "Play Again", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
+        quit_button = Button(button_x, button_y + 80, button_width, button_height, "Quit", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
         if self.game.guesses and self.game.guesses[-1] == self.game.get_secret_word():
             text = "Congratulations! You've guessed the word!"
         else:
@@ -220,14 +220,14 @@ class WordleFrontend:
             if replay_button.rect.collidepoint(mouse_pos):
                 replay_button.current_color = replay_button.hover_color
             else:
-                replay_button.current_color = LIGHT_GRAY
+                replay_button.current_color = DARK_GRAY
             replay_button.draw(self.screen)
             
             mouse_pos = pygame.mouse.get_pos()
             if quit_button.rect.collidepoint(mouse_pos):
                 quit_button.current_color = quit_button.hover_color
             else:
-                quit_button.current_color = LIGHT_GRAY
+                quit_button.current_color = DARK_GRAY
             quit_button.draw(self.screen)
             pygame.display.flip()
             
