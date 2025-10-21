@@ -31,6 +31,7 @@ class WordleFrontend:
         self.screen = pygame.display.set_mode((600, 830))
         pygame.display.set_caption("Wordle")
         self.font = pygame.font.Font('assets/FreeSansBold.ttf', 30)
+        self.small_font = pygame.font.Font('assets/FreeSansBold.ttf', 13)
         self.word_list = word_list
         self.reset_game()
     def reset_game(self):
@@ -175,6 +176,8 @@ class WordleFrontend:
                     except ValueError as e:
                         print(e)
                         self.shake_state = self.shake_time
+                else:
+                    self.shake_state = self.shake_time
             if backspace_rect.collidepoint(x, y):
                 self.bounce_state[len(self.current_guess) - 1] = 0
                 self.current_guess = self.current_guess[:-1]
@@ -191,11 +194,60 @@ class WordleFrontend:
                     except ValueError as e:
                         print(e)
                         self.shake_state = self.shake_time
+                else:
+                    self.shake_state = self.shake_time
             else:
                 if len(self.current_guess) < 5 and event.unicode.isalpha():
                     self.current_guess += event.unicode.upper()
                     self.bounce_state[len(self.current_guess) - 1] = self.bounce_time
     def game_over_screen(self):
+        background_copy = self.screen.copy()
+        clock = self.clock
+        
+        rect_w = 80
+        rect_h = 30
+        rect_x = (self.screen.get_width() - rect_w) / 2
+        start_y = -rect_h
+        end_y = 15
+        cur_y = start_y
+        animation_speed = 120
+        ratings = ["Genius", "Magnificent", "Impressive", "Splendid", "Great", "Phew"]
+        if self.game.guesses and self.game.guesses[-1] == self.game.get_secret_word():
+            rating = ratings[len(self.game.guesses) - 1]
+        else:
+            rating = self.game.get_secret_word()
+        
+        text_surf = self.small_font.render(rating, True, BG_COLOR)
+        
+        aim_loop = True
+        while aim_loop:
+            dt_sec = clock.tick(60) / 1000.0
+            cur_y += animation_speed * dt_sec
+            if cur_y >= end_y:
+                cur_y = end_y
+                aim_loop = False
+            self.screen.blit(background_copy, (0, 0))
+            rect = pygame.Rect(rect_x, cur_y, rect_w, rect_h)
+            pygame.draw.rect(self.screen, BLACK, rect)
+            text_rect = text_surf.get_rect(center=rect.center)
+            self.screen.blit(text_surf, text_rect)
+            pygame.display.flip()
+        pause_time = 1000
+        time_elapsed = 0
+        pause_loop = True
+        while pause_loop:
+            dt_ms = clock.tick(60)
+            time_elapsed += dt_ms
+            if time_elapsed >= pause_time:
+                pause_loop = False
+            self.screen.blit(background_copy, (0, 0))
+            rect = pygame.Rect(rect_x, end_y, rect_w, rect_h)
+            pygame.draw.rect(self.screen, BLACK, rect)
+            text_rect = text_surf.get_rect(center=rect.center)
+            self.screen.blit(text_surf, text_rect)
+            pygame.display.flip()
+            
+        self.screen.blit(background_copy, (0, 0))
         overlay = pygame.Surface(self.screen.get_size())
         overlay.fill(BG_COLOR)
         overlay.set_alpha(200)
@@ -203,16 +255,9 @@ class WordleFrontend:
         button_width = 170
         button_height = 60
         button_x = (self.screen.get_width() - button_width) / 2
-        button_y = 450
+        button_y = (self.screen.get_height() - button_height) / 2
         replay_button = Button(button_x, button_y, button_width, button_height, "Play Again", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
         quit_button = Button(button_x, button_y + 80, button_width, button_height, "Quit", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
-        if self.game.guesses and self.game.guesses[-1] == self.game.get_secret_word():
-            text = "Congratulations! You've guessed the word!"
-        else:
-            text = f"Game over! The secret word was: {self.game.get_secret_word()}"
-        text_surf = self.font.render(text, True, BLACK)
-        text_rect = text_surf.get_rect(center=(300, 350))
-        self.screen.blit(text_surf, text_rect)
         pygame.display.flip()
         running = True
         while running:
@@ -253,8 +298,6 @@ class WordleFrontend:
                         self.input_handle(event)
                 self.draw_board()
                 if self.game.is_game_over():
-                    if(self.game.guesses and self.game.guesses[-1] == self.game.get_secret_word()):
-                        pygame.time.delay(1000)
                     game_running = False
                 pygame.display.flip()
             action = self.game_over_screen()
