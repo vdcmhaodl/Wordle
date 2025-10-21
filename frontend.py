@@ -220,6 +220,7 @@ class WordleFrontend:
                     self.input_handle(event)
             self.draw_board()
             if self.game.is_game_over():
+                pygame.time.delay(1000)
                 self.running = False
             pygame.display.flip()
         self.game_over_screen()
