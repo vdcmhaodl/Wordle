@@ -32,6 +32,10 @@ Active it:
     ```
     source venv/bin/activate
     ```
+Deactive it:
+    ```
+    deactivate
+    ```
 #### 3. Install Dependencies
 Install the required packages using requirements.txt
 ```
