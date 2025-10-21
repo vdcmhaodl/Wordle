@@ -10,16 +10,17 @@ YELLOW = pygame.Color("#c9b458")
 DARK_GRAY = pygame.Color("#787c7e")
 BORDER = pygame.Color("#878a8c")
 class Button:
-    def __init__(self, x, y, width, height, text, font, color, hover_color, action=None):
+    def __init__(self, x, y, width, height, text, font, color, hover_color, text_color = BLACK, action=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.font = font
         self.hover_color = hover_color
         self.current_color = color
+        self.text_color = text_color
         self.action = action
     def draw(self, screen):
         pygame.draw.rect(screen, self.current_color, self.rect)
-        text_surf = self.font.render(self.text, True, BLACK)
+        text_surf = self.font.render(self.text, True, self.text_color)
         text_rect = text_surf.get_rect(center=self.rect.center)
         screen.blit(text_surf, text_rect)
     def isPressed(self, x, y):
@@ -29,11 +30,13 @@ class WordleFrontend:
         pygame.init()
         self.screen = pygame.display.set_mode((600, 830))
         pygame.display.set_caption("Wordle")
-        self.game = WordleGame(word_list)
         self.font = pygame.font.Font('assets/FreeSansBold.ttf', 30)
-        self.running = True
+        self.word_list = word_list
+        self.reset_game()
+    def reset_game(self):
+        self.game = WordleGame(self.word_list)
+        print('New secret word is:', self.game.get_secret_word())
         self.current_guess = ""
-        
         #Bounce animation
         self.bounce_state = [0] * 5
         self.bounce_time = 200
@@ -193,8 +196,16 @@ class WordleFrontend:
                     self.current_guess += event.unicode.upper()
                     self.bounce_state[len(self.current_guess) - 1] = self.bounce_time
     def game_over_screen(self):
-        self.screen.fill(BG_COLOR)
-        ex = "Press any key to exit."
+        overlay = pygame.Surface(self.screen.get_size())
+        overlay.fill(BG_COLOR)
+        overlay.set_alpha(200)
+        self.screen.blit(overlay, (0, 0))
+        button_width = 170
+        button_height = 60
+        button_x = (self.screen.get_width() - button_width) / 2
+        button_y = 450
+        replay_button = Button(button_x, button_y, button_width, button_height, "Play Again", self.font, LIGHT_GRAY, DARK_GRAY, BG_COLOR)
+        quit_button = Button(button_x, button_y + 80, button_width, button_height, "Quit", self.font, LIGHT_GRAY, DARK_GRAY, BG_COLOR)
         if self.game.guesses and self.game.guesses[-1] == self.game.get_secret_word():
             text = "Congratulations! You've guessed the word!"
         else:
@@ -202,27 +213,52 @@ class WordleFrontend:
         text_surf = self.font.render(text, True, BLACK)
         text_rect = text_surf.get_rect(center=(300, 350))
         self.screen.blit(text_surf, text_rect)
-        ex_surf = self.font.render(ex, True, BLACK)
-        ex_rect = ex_surf.get_rect(center=(300, 400))
-        self.screen.blit(ex_surf, ex_rect)
         pygame.display.flip()
         running = True
         while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT or event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                    running = False
-    def run(self):
-        while self.running:
+            mouse_pos = pygame.mouse.get_pos()
+            if replay_button.rect.collidepoint(mouse_pos):
+                replay_button.current_color = replay_button.hover_color
+            else:
+                replay_button.current_color = LIGHT_GRAY
+            replay_button.draw(self.screen)
+            
+            mouse_pos = pygame.mouse.get_pos()
+            if quit_button.rect.collidepoint(mouse_pos):
+                quit_button.current_color = quit_button.hover_color
+            else:
+                quit_button.current_color = LIGHT_GRAY
+            quit_button.draw(self.screen)
+            pygame.display.flip()
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.running = False
-                else:
-                    self.input_handle(event)
-            self.draw_board()
-            if self.game.is_game_over():
-                pygame.time.delay(1000)
-                self.running = False
-            pygame.display.flip()
-        self.game_over_screen()
+                    return 'quit'
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if replay_button.rect.collidepoint(event.pos):
+                        return 'replay'
+                    elif quit_button.rect.collidepoint(event.pos):
+                        return 'quit'
+    def run(self):
+        play_again = True
+        while play_again:
+            self.reset_game()
+            game_running = True
+            while game_running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        raise SystemExit
+                    else:
+                        self.input_handle(event)
+                self.draw_board()
+                if self.game.is_game_over():
+                    if(self.game.guesses and self.game.guesses[-1] == self.game.get_secret_word()):
+                        pygame.time.delay(1000)
+                    game_running = False
+                pygame.display.flip()
+            action = self.game_over_screen()
+            if action == 'quit':
+                play_again = False
         pygame.quit()
         

@@ -20,7 +20,6 @@ def main():
     #     print("Game over! The secret word was:", game.get_secret_word())
     word_list = load_word_list()
     frontend = WordleFrontend(word_list)
-    print('Secret word is:', frontend.game.get_secret_word()) 
     frontend.run()
 if __name__ == "__main__":
     main()
