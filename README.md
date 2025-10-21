@@ -26,7 +26,7 @@ Active it:
 
 - On Windows:
     ```
-    .\venv\Scripts\activate
+    .\.venv\Scripts\activate
     ```
 - On MacOS/Linux:
     ```
