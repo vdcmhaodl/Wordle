@@ -48,6 +48,14 @@ class WordleFrontend:
         self.shake_state = 0
         self.shake_time = 400
         self.shake_magnitude = 10
+        
+        #Flip animation
+        self.flip_state = [0] * 5
+        self.flip_time = 500
+        self.flip_delay = 300
+        self.flipping_row_index = -1
+        
+        self.key_colors = {}
     def draw_board(self):
         dt = self.clock.tick(60)
         for i in range(len(self.bounce_state)):
@@ -59,6 +67,32 @@ class WordleFrontend:
             self.shake_state -= dt
             if self.shake_state < 0:
                 self.shake_state = 0
+        all_flips_done = True
+        if self.flipping_row_index != -1:
+            feedback = self.game._get_feedback(self.game.guesses[self.flipping_row_index])
+            guess = self.game.guesses[self.flipping_row_index]
+            for i in range(5):
+                if self.flip_state[i] > 0:
+                    all_flips_done = False
+                    old_time = self.flip_state[i]
+                    self.flip_state[i] -= dt
+                    
+                    half = self.flip_time / 2
+                    
+                    if old_time > (self.flip_time + (i * self.flip_delay) - half) and self.flip_state[i] <= (self.flip_time + (i * self.flip_delay) - half):
+                        letter = guess[i]
+                        fb = feedback[i]
+                        current_key_color = self.key_colors.get(letter, LIGHT_GRAY)
+                        if fb == 'correct':
+                            self.key_colors[letter] = GREEN
+                        elif fb == 'present' and current_key_color != GREEN:
+                            self.key_colors[letter] = YELLOW
+                        elif fb == 'absent' and current_key_color not in (GREEN, YELLOW):
+                            self.key_colors[letter] = DARK_GRAY
+                    if self.flip_state[i] < 0:
+                        self.flip_state[i] = 0
+            if all_flips_done:
+                self.flipping_row_index = -1
         keyboard = [
             "QWERTYUIOP",
             "ASDFGHJKL",
@@ -85,70 +119,125 @@ class WordleFrontend:
             for col in range(5):
                 x = col * 100 + 55 + x_offset
                 y = row * 100 + 20
-                rect = pygame.Rect(x, y, 90, 90)
-                pygame.draw.rect(self.screen, BG_COLOR, rect)
-                pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
-                
-                cur_x = x
-                cur_y = y
-                cur_w = 90
-                cur_h = 90
-                if row == len(self.game.guesses) and col < len(self.current_guess) and self.bounce_state[col] > 0:
-                    time = self.bounce_time - self.bounce_state[col]
-                    if time < self.bounce_time / 2:
-                        scale = 1 + (self.bounce_max_scale - 1) * (time / (self.bounce_time / 2))
-                    else:
-                        scale = self.bounce_max_scale - (self.bounce_max_scale - 1) * ((time - self.bounce_time / 2) / (self.bounce_time / 2))
-                    cur_w = 90 * scale
-                    cur_h = 90 * scale
-                    cur_x = x - (cur_w - 90) / 2
-                    cur_y = y - (cur_h - 90) / 2
-                rect = pygame.Rect(cur_x, cur_y, cur_w, cur_h)
-                
-                pygame.draw.rect(self.screen, BG_COLOR, rect)
-                pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
+                if row == self.flipping_row_index:
+                    time_left = self.flip_state[col]
+                    total_time = self.flip_time + (col * self.flip_delay)
+                    time_elapsed = total_time - time_left
+                    flip_progress = (time_elapsed - (col * self.flip_delay)) / self.flip_time
+                    flip_progress = min(1.0, max(0.0, flip_progress))
                     
-                if row < len(self.game.guesses):
-                    guess = self.game.guesses[row]
-                    feedback = self.game._get_feedback(guess)
-                    color = LIGHT_GRAY
-                    if feedback[col] == 'correct':
-                        color = GREEN
-                    elif feedback[col] == 'present':
-                        color = YELLOW
-                    elif feedback[col] == 'absent':
-                        color = DARK_GRAY
-                    pygame.draw.rect(self.screen, color, rect)
-                    letter_surf = self.font.render(guess[col], True, BG_COLOR)
-                    letter_rect = letter_surf.get_rect(center=rect.center)
-                    self.screen.blit(letter_surf, letter_rect)
-                    for keyboard_row, keys in enumerate(keyboard):
-                        for keyboard_col, key in enumerate(keys):
-                            if key == guess[col]:
-                                keyboard_x = keyboard_col * 50 + 55 + (keyboard_row * 35)
-                                keyboard_y = 625 + (keyboard_row * 60)
-                                key_rect = pygame.Rect(keyboard_x, keyboard_y, 45, 55)
-                                if feedback[col] == 'correct':
-                                    pygame.draw.rect(self.screen, GREEN, key_rect)
-                                elif feedback[col] == 'present':
-                                    if self.screen.get_at(key_rect.topleft) != GREEN:
-                                        pygame.draw.rect(self.screen, YELLOW, key_rect)
-                                elif feedback[col] == 'absent':
-                                    if self.screen.get_at(key_rect.topleft) not in (GREEN, YELLOW):
-                                        pygame.draw.rect(self.screen, DARK_GRAY, key_rect)
-                                letter_surf = self.font.render(key, True, BG_COLOR)
-                                letter_rect = letter_surf.get_rect(center=key_rect.center)
-                                self.screen.blit(letter_surf, letter_rect)
-    
-                elif row == len(self.game.guesses):
-                    if col < len(self.current_guess):
-                        pygame.draw.rect(self.screen, BORDER, rect, 2)
-                        letter_surf = self.font.render(self.current_guess[col], True, BLACK)
+                    scale_y_box = 1.0
+                    if flip_progress > 0:
+                        if flip_progress < 0.5:
+                            scale_y_box = 1.0 - (flip_progress * 2)
+                        else:
+                            scale_y_box = (flip_progress - 0.5) * 2
+                            
+                    cur_h = 90 * scale_y_box
+                    cur_y = y + (90 - cur_h) / 2
+                    cur_rect = pygame.Rect(x, cur_y, 90, cur_h)
+                    
+                    letter_to_draw = self.game.guesses[row][col]
+                    if flip_progress >= 0.5:
+                        guess = self.game.guesses[row]
+                        feedback = self.game._get_feedback(guess)
+                        color = LIGHT_GRAY
+                        if feedback[col] == 'correct':
+                            color = GREEN
+                        elif feedback[col] == 'present':
+                            color = YELLOW
+                        elif feedback[col] == 'absent':
+                            color = DARK_GRAY
+                        pygame.draw.rect(self.screen, color, cur_rect)
+                        if cur_h > 5:
+                            original_surf = self.font.render(letter_to_draw, True, BG_COLOR)
+                            original_size = original_surf.get_size()
+                            
+                            scaled_h = int(original_size[1] * scale_y_box)
+                            if scaled_h < 1:
+                                scaled_h = 1
+                            scaled_surf = pygame.transform.smoothscale(original_surf, (original_size[0], scaled_h))
+                            scaled_rect = scaled_surf.get_rect(center=cur_rect.center)
+                            self.screen.blit(scaled_surf, scaled_rect)
+                    else:
+                        pygame.draw.rect(self.screen, BG_COLOR, cur_rect)
+                        pygame.draw.rect(self.screen, BORDER, cur_rect, 2)
+                        if cur_h > 5:
+                            original_surf = self.font.render(letter_to_draw, True, BLACK)
+                            original_size = original_surf.get_size()
+                            
+                            scaled_h = int(original_size[1] * scale_y_box)
+                            if scaled_h < 1:
+                                scaled_h = 1
+                            scaled_surf = pygame.transform.smoothscale(original_surf, (original_size[0], scaled_h))
+                            scaled_rect = scaled_surf.get_rect(center=cur_rect.center)
+                            self.screen.blit(scaled_surf, scaled_rect)
+                else:
+                    base_rect = pygame.Rect(x, y, 90, 90)
+                    pygame.draw.rect(self.screen, BG_COLOR, base_rect)
+                    
+                    cur_x = x
+                    cur_y = y
+                    cur_w = 90
+                    cur_h = 90
+                    if row == len(self.game.guesses) and col < len(self.current_guess) and self.bounce_state[col] > 0:
+                        time = self.bounce_time - self.bounce_state[col]
+                        if time < self.bounce_time / 2:
+                            scale = 1 + (self.bounce_max_scale - 1) * (time / (self.bounce_time / 2))
+                        else:
+                            scale = self.bounce_max_scale - (self.bounce_max_scale - 1) * ((time - self.bounce_time / 2) / (self.bounce_time / 2))
+                        cur_w = 90 * scale
+                        cur_h = 90 * scale
+                        cur_x = x - (cur_w - 90) / 2
+                        cur_y = y - (cur_h - 90) / 2
+                    rect = pygame.Rect(cur_x, cur_y, cur_w, cur_h)
+                    
+                    pygame.draw.rect(self.screen, BG_COLOR, rect)
+                    pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
+                        
+                    if row < len(self.game.guesses):
+                        guess = self.game.guesses[row]
+                        feedback = self.game._get_feedback(guess)
+                        color = LIGHT_GRAY
+                        if feedback[col] == 'correct':
+                            color = GREEN
+                        elif feedback[col] == 'present':
+                            color = YELLOW
+                        elif feedback[col] == 'absent':
+                            color = DARK_GRAY
+                        pygame.draw.rect(self.screen, color, rect)
+                        letter_surf = self.font.render(guess[col], True, BG_COLOR)
                         letter_rect = letter_surf.get_rect(center=rect.center)
                         self.screen.blit(letter_surf, letter_rect)
+                        for keyboard_row, keys in enumerate(keyboard):
+                            for keyboard_col, key in enumerate(keys):
+                                if key == guess[col]:
+                                    keyboard_x = keyboard_col * 50 + 55 + (keyboard_row * 35)
+                                    keyboard_y = 625 + (keyboard_row * 60)
+                                    key_rect = pygame.Rect(keyboard_x, keyboard_y, 45, 55)
+                                    if feedback[col] == 'correct':
+                                        pygame.draw.rect(self.screen, GREEN, key_rect)
+                                    elif feedback[col] == 'present':
+                                        if self.screen.get_at(key_rect.topleft) != GREEN:
+                                            pygame.draw.rect(self.screen, YELLOW, key_rect)
+                                    elif feedback[col] == 'absent':
+                                        if self.screen.get_at(key_rect.topleft) not in (GREEN, YELLOW):
+                                            pygame.draw.rect(self.screen, DARK_GRAY, key_rect)
+                                    letter_surf = self.font.render(key, True, BG_COLOR)
+                                    letter_rect = letter_surf.get_rect(center=key_rect.center)
+                                    self.screen.blit(letter_surf, letter_rect)
+        
+                    elif row == len(self.game.guesses):
+                        if col < len(self.current_guess):
+                            pygame.draw.rect(self.screen, BORDER, rect, 2)
+                            letter_surf = self.font.render(self.current_guess[col], True, BLACK)
+                            letter_rect = letter_surf.get_rect(center=rect.center)
+                            self.screen.blit(letter_surf, letter_rect)
         
         pygame.display.flip()
     def input_handle(self, event):
+        if self.flipping_row_index != -1:
+            return
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
             keyboard = [
@@ -171,6 +260,9 @@ class WordleFrontend:
                 if len(self.current_guess) == 5:
                     try:
                         self.game.make_guess(self.current_guess)
+                        self.flipping_row_index = len(self.game.guesses) - 1
+                        for i in range(5):
+                            self.flip_state[i] = self.flip_time + i * self.flip_delay
                         self.current_guess = ""
                         self.bounce_state = [0] * 5
                     except ValueError as e:
@@ -189,6 +281,9 @@ class WordleFrontend:
                 if len(self.current_guess) == 5:
                     try:
                         self.game.make_guess(self.current_guess)
+                        self.flipping_row_index = len(self.game.guesses) - 1
+                        for i in range(5):
+                            self.flip_state[i] = self.flip_time + i * self.flip_delay
                         self.current_guess = ""
                         self.bounce_state = [0] * 5
                     except ValueError as e:
@@ -297,7 +392,7 @@ class WordleFrontend:
                     else:
                         self.input_handle(event)
                 self.draw_board()
-                if self.game.is_game_over():
+                if self.game.is_game_over() and self.flipping_row_index == -1:
                     game_running = False
                 pygame.display.flip()
             action = self.game_over_screen()
