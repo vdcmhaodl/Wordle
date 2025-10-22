@@ -440,12 +440,16 @@ class WordleFrontend:
         overlay.fill(BG_COLOR)
         overlay.set_alpha(200)
         self.screen.blit(overlay, (0, 0))
-        button_width = 170
+        button_width = 200
         button_height = 60
         button_x = (self.screen.get_width() - button_width) / 2
         button_y = (self.screen.get_height() - button_height) / 2
-        replay_button = Button(button_x, button_y, button_width, button_height, "Play Again", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
-        quit_button = Button(button_x, button_y + 80, button_width, button_height, "Quit", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
+        replay_button = Button(button_x, button_y, button_width, button_height, "PLAY AGAIN", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
+        quit_button = Button(button_x, button_y + 80, button_width, button_height, "QUIT", self.font, DARK_GRAY, LIGHT_GRAY, BG_COLOR)
+        text = "THE ANSWER IS: " + self.game.get_secret_word()
+        text_surf = self.font.render(text, True, BLACK)
+        text_rect = text_surf.get_rect(center=(self.screen.get_width() / 2, button_y - 100))
+        self.screen.blit(text_surf, text_rect)
         pygame.display.flip()
         running = True
         while running:
