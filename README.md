@@ -5,7 +5,22 @@ Wordle is a popular guessing word game. This is a self-project contributed by VÃ
 
 Thank you __**[Pipythonmc](https://github.com/pythonmcpi)**__ for  wordlist dataset: https://github.com/pythonmcpi/wordle-wordlist
 
-### How to run
+### Features
+
+- **Unlimited Plays** - Play as many games as you want
+- **Statistics Tracking** - Track your wins, games played, and winning streak
+- **Modern UI** - Clean, polished interface with smooth interactions
+
+### How to Play
+
+1. **Guess the word** - Type a 5-letter word using your keyboard and press Enter to submit your guess
+3. **Check feedback**:
+   - **Green** - Correct letter in correct position
+   - **Yellow** - Correct letter in wrong position
+   - **Gray** - Letter not in the word
+4. **Win** - Guess the word within 6 tries
+
+### Installation
 
 **Python version: 3.11+**
 
