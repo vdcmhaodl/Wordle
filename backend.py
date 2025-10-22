@@ -1,8 +1,12 @@
 import random
 
+def load_word_list(filepath):
+    with open(filepath) as f:
+        return [line.strip().upper() for line in f.readlines()]
 class WordleGame:
     def __init__(self, word_list):
-        self.word_list = word_list
+        self.word_list = load_word_list(word_list)
+        self.word_guess = load_word_list('guess.txt')
         self.secret_word = random.choice(self.word_list).upper()
         self.attempts = 6
         self.guesses = []
@@ -11,7 +15,7 @@ class WordleGame:
         guess = guess.upper()
         if len(guess) != len(self.secret_word):
             raise ValueError("Guess must be the same length as the secret word.")
-        if guess not in self.word_list:
+        if guess not in self.word_guess:
             raise ValueError("Guess must be a valid word from the word list.")
         
         self.guesses.append(guess)

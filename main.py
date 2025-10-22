@@ -1,8 +1,5 @@
 from backend import WordleGame
 from frontend import WordleFrontend
-def load_word_list():
-    with open("words.txt") as f:
-        return [line.strip().upper() for line in f.readlines()]
 def main():
     # word_list = load_word_list()
     # game = WordleGame(word_list)
@@ -18,8 +15,7 @@ def main():
     #     print("Congratulations! You've guessed the word:", game.get_secret_word())
     # else:
     #     print("Game over! The secret word was:", game.get_secret_word())
-    word_list = load_word_list()
-    frontend = WordleFrontend(word_list)
+    frontend = WordleFrontend('words.txt')
     frontend.run()
 if __name__ == "__main__":
     main()
