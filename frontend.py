@@ -285,7 +285,6 @@ class WordleFrontend:
                             self.screen.blit(letter_surf, letter_rect)
         
         pygame.display.flip()
-    # (Bạn có thể thêm hàm này vào ngay sau hàm game_over_screen)
     
     def show_message_box(self, message):
 
