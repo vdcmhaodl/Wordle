@@ -56,6 +56,7 @@ class WordleFrontend:
         self.flipping_row_index = -1
         
         self.key_colors = {}
+        self.buttons = []
     def draw_board(self):
         dt = self.clock.tick(60)
         for i in range(len(self.bounce_state)):
@@ -77,40 +78,87 @@ class WordleFrontend:
                     old_time = self.flip_state[i]
                     self.flip_state[i] -= dt
                     
-                    half = self.flip_time / 2
+                    # half = self.flip_time / 2
                     
-                    if old_time > (self.flip_time + (i * self.flip_delay) - half) and self.flip_state[i] <= (self.flip_time + (i * self.flip_delay) - half):
-                        letter = guess[i]
-                        fb = feedback[i]
-                        current_key_color = self.key_colors.get(letter, LIGHT_GRAY)
-                        if fb == 'correct':
-                            self.key_colors[letter] = GREEN
-                        elif fb == 'present' and current_key_color != GREEN:
-                            self.key_colors[letter] = YELLOW
-                        elif fb == 'absent' and current_key_color not in (GREEN, YELLOW):
-                            self.key_colors[letter] = DARK_GRAY
+                    # if old_time > (self.flip_time + (i * self.flip_delay) - half) and self.flip_state[i] <= (self.flip_time + (i * self.flip_delay) - half):
+                    #     letter = guess[i]
+                    #     fb = feedback[i]
+                    #     current_key_color = self.key_colors.get(letter, LIGHT_GRAY)
+                    #     if fb == 'correct':
+                    #         self.key_colors[letter] = GREEN
+                    #     elif fb == 'present' and current_key_color != GREEN:
+                    #         self.key_colors[letter] = YELLOW
+                    #     elif fb == 'absent' and current_key_color not in (GREEN, YELLOW):
+                    #         self.key_colors[letter] = DARK_GRAY
                     if self.flip_state[i] < 0:
                         self.flip_state[i] = 0
             if all_flips_done:
+                guess = self.game.guesses[self.flipping_row_index]
+                feedback = self.game._get_feedback(guess)
+
+                for i in range(5):
+                    letter = guess[i]
+                    fb = feedback[i]
+                    current_key_color = self.key_colors.get(letter, LIGHT_GRAY)
+                    
+                    if fb == 'correct':
+                        self.key_colors[letter] = GREEN
+                    elif fb == 'present' and current_key_color != GREEN:
+                        self.key_colors[letter] = YELLOW
+                    elif fb == 'absent' and current_key_color not in (GREEN, YELLOW):
+                        self.key_colors[letter] = DARK_GRAY
                 self.flipping_row_index = -1
         keyboard = [
             "QWERTYUIOP",
             "ASDFGHJKL",
             "ZXCVBNM"
         ]
-        buttons = []
+        self.buttons = []
         self.screen.fill(BG_COLOR)
-        buttons.append(Button(6.3 * 50 + 55 + (3 * 35), 625 + 2 * 60, 100, 55, "ENTER", self.font, LIGHT_GRAY, DARK_GRAY))
-        buttons.append(Button(20, 625 + 2 * 60, 100, 55, "DEL", self.font, LIGHT_GRAY, DARK_GRAY))
+        SCREEN_WIDTH = self.screen.get_width()
+        KEY_WIDTH = 45
+        KEY_HEIGHT = 55
+        KEY_GAP = 5
+        KEY_PITCH = KEY_WIDTH + KEY_GAP
+        
+        ENTER_WIDTH = 100
+        DEL_WIDTH = 100
+        
+        rows_widths = []
+        
+        for i, keys in enumerate(keyboard):
+            if i == 0:
+                width = (10 * KEY_WIDTH) + (9 * KEY_GAP)
+            if i == 1:
+                width = (9 * KEY_WIDTH) + (8 * KEY_GAP)
+            if i == 2:
+                width = DEL_WIDTH + KEY_GAP + (7 * KEY_WIDTH) + (6 * KEY_GAP) + KEY_GAP + ENTER_WIDTH
+            rows_widths.append(width)
+        
         for row, keys in enumerate(keyboard):
+            cur_row_width = rows_widths[row]
+            start_x = (SCREEN_WIDTH - cur_row_width) / 2
+            y = 625 + (row * 60)
+            cur_x = start_x
+            if row == 2:
+                button = Button(cur_x, y, DEL_WIDTH, KEY_HEIGHT, "Delete", self.font, LIGHT_GRAY, DARK_GRAY)
+                self.buttons.append(button)
+                cur_x += DEL_WIDTH + KEY_GAP
             for col, key in enumerate(keys):
-                x = col * 50 + 55 + (row * 35)
-                y = 625 + (row * 60)
-                button = Button(x, y, 45, 55, key, self.font, LIGHT_GRAY, DARK_GRAY)
-                buttons.append(button)
-        for button in buttons:
+                x = cur_x + (col * KEY_PITCH)
+                key_color = self.key_colors.get(key, LIGHT_GRAY)
+                text_color = BLACK if key_color == LIGHT_GRAY else BG_COLOR
+                button = Button(x, y, KEY_WIDTH, KEY_HEIGHT, key, self.font, key_color, DARK_GRAY, text_color)
+                self.buttons.append(button)
+            if row == 2:
+                last_letter_x = cur_x + ((len(keys) - 1) * KEY_PITCH)
+                last_letter_end_x = last_letter_x + KEY_WIDTH
+                enter_x = last_letter_end_x + KEY_GAP
+                
+                button = Button(enter_x, y, ENTER_WIDTH, KEY_HEIGHT, "Enter", self.font, LIGHT_GRAY, DARK_GRAY)
+                self.buttons.append(button)
+        for button in self.buttons:
             button.draw(self.screen)
-    
         for row in range(6):
             x_offset = 0
             if row == len(self.game.guesses) and self.shake_state > 0:
@@ -192,8 +240,10 @@ class WordleFrontend:
                         cur_y = y - (cur_h - 90) / 2
                     rect = pygame.Rect(cur_x, cur_y, cur_w, cur_h)
                     
-                    pygame.draw.rect(self.screen, BG_COLOR, rect)
-                    pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
+                    if row == len(self.game.guesses) and col < len(self.current_guess):
+                        pygame.draw.rect(self.screen, BORDER, rect, 2)
+                    else:
+                        pygame.draw.rect(self.screen, LIGHT_GRAY, rect, 2)
                         
                     if row < len(self.game.guesses):
                         guess = self.game.guesses[row]
@@ -209,24 +259,24 @@ class WordleFrontend:
                         letter_surf = self.font.render(guess[col], True, BG_COLOR)
                         letter_rect = letter_surf.get_rect(center=rect.center)
                         self.screen.blit(letter_surf, letter_rect)
-                        for keyboard_row, keys in enumerate(keyboard):
-                            for keyboard_col, key in enumerate(keys):
-                                if key == guess[col]:
-                                    keyboard_x = keyboard_col * 50 + 55 + (keyboard_row * 35)
-                                    keyboard_y = 625 + (keyboard_row * 60)
-                                    key_rect = pygame.Rect(keyboard_x, keyboard_y, 45, 55)
-                                    if feedback[col] == 'correct':
-                                        pygame.draw.rect(self.screen, GREEN, key_rect)
-                                    elif feedback[col] == 'present':
-                                        if self.screen.get_at(key_rect.topleft) != GREEN:
-                                            pygame.draw.rect(self.screen, YELLOW, key_rect)
-                                    elif feedback[col] == 'absent':
-                                        if self.screen.get_at(key_rect.topleft) not in (GREEN, YELLOW):
-                                            pygame.draw.rect(self.screen, DARK_GRAY, key_rect)
-                                    letter_surf = self.font.render(key, True, BG_COLOR)
-                                    letter_rect = letter_surf.get_rect(center=key_rect.center)
-                                    self.screen.blit(letter_surf, letter_rect)
-        
+
+                        # for keyboard_row, keys in enumerate(keyboard):
+                        #     for keyboard_col, key in enumerate(keys):
+                        #         if key == guess[col]:
+                        #             keyboard_x = keyboard_col * 50 + 55 + (keyboard_row * 35)
+                        #             keyboard_y = 625 + (keyboard_row * 60)
+                        #             key_rect = pygame.Rect(keyboard_x, keyboard_y, 45, 55)
+                        #             if feedback[col] == 'correct':
+                        #                 pygame.draw.rect(self.screen, GREEN, key_rect)
+                        #             elif feedback[col] == 'present':
+                        #                 if self.screen.get_at(key_rect.topleft) != GREEN:
+                        #                     pygame.draw.rect(self.screen, YELLOW, key_rect)
+                        #             elif feedback[col] == 'absent':
+                        #                 if self.screen.get_at(key_rect.topleft) not in (GREEN, YELLOW):
+                        #                     pygame.draw.rect(self.screen, DARK_GRAY, key_rect)
+                        #             letter_surf = self.font.render(key, True, BG_COLOR)
+                        #             letter_rect = letter_surf.get_rect(center=key_rect.center)
+                        #             self.screen.blit(letter_surf, letter_rect)
                     elif row == len(self.game.guesses):
                         if col < len(self.current_guess):
                             pygame.draw.rect(self.screen, BORDER, rect, 2)
@@ -235,44 +285,87 @@ class WordleFrontend:
                             self.screen.blit(letter_surf, letter_rect)
         
         pygame.display.flip()
+    # (Bạn có thể thêm hàm này vào ngay sau hàm game_over_screen)
+    
+    def show_message_box(self, message):
+
+        background_copy = self.screen.copy() 
+        clock = self.clock
+
+        text_surf = self.small_font.render(message, True, BG_COLOR)
+        rect_w = text_surf.get_width() + 20 
+        rect_h = 30
+        rect_x = (self.screen.get_width() - rect_w) / 2
+
+        start_y = -rect_h
+        end_y = 15
+        cur_y = start_y
+        animation_speed = 120 
+        
+        aim_loop = True
+        while aim_loop:
+            dt_sec = clock.tick(60) / 1000.0
+            cur_y += animation_speed * dt_sec
+            if cur_y >= end_y:
+                cur_y = end_y
+                aim_loop = False
+            
+            self.screen.blit(background_copy, (0, 0)) 
+            rect = pygame.Rect(rect_x, cur_y, rect_w, rect_h)
+            pygame.draw.rect(self.screen, BLACK, rect)
+            text_rect = text_surf.get_rect(center=rect.center)
+            self.screen.blit(text_surf, text_rect) 
+            pygame.display.flip()
+        pause_time = 1000
+        time_elapsed = 0
+        pause_loop = True
+        while pause_loop:
+            dt_ms = clock.tick(60)
+            time_elapsed += dt_ms
+            if time_elapsed >= pause_time:
+                pause_loop = False
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    raise SystemExit
+            
+            rect = pygame.Rect(rect_x, end_y, rect_w, rect_h)
+            pygame.draw.rect(self.screen, BLACK, rect)
+            text_rect = text_surf.get_rect(center=rect.center)
+            self.screen.blit(text_surf, text_rect)
+            pygame.display.flip()
+            
     def input_handle(self, event):
         if self.flipping_row_index != -1:
             return
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = event.pos
-            keyboard = [
-                "QWERTYUIOP",
-                "ASDFGHJKL",
-                "ZXCVBNM"
-            ]
-            for row, keys in enumerate(keyboard):
-                for col, key in enumerate(keys):
-                    bx = col * 50 + 55 + (row * 35)
-                    by = 625 + (row * 60)
-                    button_rect = pygame.Rect(bx, by, 45, 55)
-                    if button_rect.collidepoint(x, y):
-                        if len(self.current_guess) < 5:
-                            self.current_guess += key
+            for button in self.buttons:
+                if button.isPressed(x, y):
+                    if button.text == "Enter":
+                        if len(self.current_guess) == 5:
+                            try:
+                                self.game.make_guess(self.current_guess)
+                                self.flipping_row_index = len(self.game.guesses) - 1
+                                for i in range(5):
+                                    self.flip_state[i] = self.flip_time + i * self.flip_delay
+                                self.current_guess = ""
+                                self.bounce_state = [0] * 5
+                            except ValueError as e:
+                                print(e)
+                                self.shake_state = self.shake_time
+                        else:
+                            self.shake_state = self.shake_time
+                    elif button.text == "Delete":
+                        if len(self.current_guess) > 0:
+                            self.bounce_state[len(self.current_guess) - 1] = 0
+                            self.current_guess = self.current_guess[:-1]
+                    else:
+                        if len(self.current_guess) < 5 and button.text.isalpha():
+                            self.current_guess += button.text.upper()
                             self.bounce_state[len(self.current_guess) - 1] = self.bounce_time
-            enter_rect = pygame.Rect(6.3 * 50 + 55 + (3 * 35), 625 + 2 * 60, 100, 55)
-            backspace_rect = pygame.Rect(20, 625 + 2 * 60, 100, 55)
-            if enter_rect.collidepoint(x, y):
-                if len(self.current_guess) == 5:
-                    try:
-                        self.game.make_guess(self.current_guess)
-                        self.flipping_row_index = len(self.game.guesses) - 1
-                        for i in range(5):
-                            self.flip_state[i] = self.flip_time + i * self.flip_delay
-                        self.current_guess = ""
-                        self.bounce_state = [0] * 5
-                    except ValueError as e:
-                        print(e)
-                        self.shake_state = self.shake_time
-                else:
-                    self.shake_state = self.shake_time
-            if backspace_rect.collidepoint(x, y):
-                self.bounce_state[len(self.current_guess) - 1] = 0
-                self.current_guess = self.current_guess[:-1]
+                    return
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSPACE:
                 self.bounce_state[len(self.current_guess) - 1] = 0
