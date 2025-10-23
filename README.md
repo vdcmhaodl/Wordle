@@ -38,11 +38,11 @@ python -m venv venv
 
 Active it:
 
-- On Windows:
+- On **Windows**:
     ```
     .\venv\Scripts\activate
     ```
-- On MacOS/Linux:
+- On **MacOS/Linux**:
     ```
     source venv/bin/activate
     ```
@@ -57,11 +57,11 @@ Install the required packages using requirements.txt
 pip install -r requirements.txt
 ```
 #### 4. Run the game
-- On Windows:
+- On **Windows**:
     ```
     py main.py
     ```
-- On MacOS/Linux:
+- On **MacOS/Linux**:
     ```
     python3 main.py
     ```
