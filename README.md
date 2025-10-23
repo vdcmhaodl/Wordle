@@ -60,7 +60,7 @@ pip install -r requirements.txt
     ```
     python3 main.py
     ```
-### 5. Deactivate your Environment
+#### 5. Deactivate your Environment
 Deactivate it:
 
 ```
