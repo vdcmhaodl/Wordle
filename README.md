@@ -63,5 +63,5 @@ pip install -r requirements.txt
     ```
 - On MacOS/Linux:
     ```
-    python main.py
+    python3 main.py
     ```
