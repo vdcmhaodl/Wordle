@@ -8,7 +8,6 @@ Thank you __**[pythonmcpi](https://github.com/pythonmcpi)**__ for  wordlist data
 ### Features
 
 - **Unlimited Plays** - Play as many games as you want
-- **Statistics Tracking** - Track your wins, games played, and winning streak
 - **Modern UI** - Clean, polished interface with smooth interactions
 
 ### How to Play
