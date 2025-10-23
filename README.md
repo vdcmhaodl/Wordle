@@ -36,7 +36,7 @@ Create a virtual environment to avoid conflicts with other projects.
 python -m venv venv
 ```
 
-Active it:
+Activate it:
 
 - On **Windows**:
     ```
@@ -46,11 +46,6 @@ Active it:
     ```
     source venv/bin/activate
     ```
-Deactive it:
-
-```
-deactivate
-```
 #### 3. Install Dependencies
 Install the required packages using requirements.txt
 ```
@@ -65,3 +60,9 @@ pip install -r requirements.txt
     ```
     python3 main.py
     ```
+### 5. Deactivate your Environment
+Deactivate it:
+
+```
+deactivate
+```
